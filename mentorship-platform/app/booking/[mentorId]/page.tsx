@@ -1,36 +1,57 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import type { MentorProfile, MentorService } from '@/lib/types';
+import BookingStep2Page from './step-2/page';
+import BookingStep3Page from './step-3/page';
 
-interface BookingStep1Props {
-  params: { mentorId: string };
+interface BookingProps {
+  params: Promise<{ mentorId: string }>;
 }
 
-export default function BookingPage({ params }: BookingStep1Props) {
+export default function BookingPage({ params }: BookingProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const step = searchParams.get('step');
+
+  if (step === '2') {
+    return <BookingStep2Page params={params} />;
+  }
+
+  if (step === '3') {
+    return <BookingStep3Page params={params} />;
+  }
+
+  return <BookingStep1Page params={params} />;
+}
+
+function BookingStep1Page({ params }: BookingProps) {
   const router = useRouter();
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
 
   const { data: mentor, isLoading } = useQuery({
-    queryKey: ['mentor', params.mentorId],
+    queryKey: ['mentor', params],
     queryFn: async () => {
+      const resolvedParams = await params;
       const { data, error } = await supabase
         .from('mentor_profiles')
         .select('*, services:mentor_services(*), user:users(*)')
-        .eq('id', params.mentorId)
+        .eq('id', resolvedParams.mentorId)
         .single();
       if (error) throw error;
-      return data;
+      return data as unknown as MentorProfile;
     },
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedServiceId) return;
+    const resolvedParams = await params;
     router.push(
-      `/booking/${params.mentorId}?step=2&service=${selectedServiceId}`
+      `/booking/${resolvedParams.mentorId}?step=2&service=${selectedServiceId}`
     );
   };
 
@@ -55,7 +76,7 @@ export default function BookingPage({ params }: BookingStep1Props) {
 
       {/* Mentor Info */}
       <div className="mb-8 p-4 bg-slate-50 rounded-lg">
-        <h1 className="text-2xl font-bold">{mentor.user.first_name} {mentor.user.last_name}</h1>
+        <h1 className="text-2xl font-bold">{mentor.user?.first_name} {mentor.user?.last_name}</h1>
         <p className="text-slate-600">{mentor.headline}</p>
       </div>
 
@@ -63,7 +84,7 @@ export default function BookingPage({ params }: BookingStep1Props) {
       <div>
         <h2 className="text-xl font-bold mb-4">Select a Service</h2>
         <div className="space-y-3">
-          {mentor.services?.map((service) => (
+          {mentor.services?.map((service: MentorService) => (
             <label
               key={service.id}
               className={`block p-4 border-2 rounded-lg cursor-pointer transition-all ${

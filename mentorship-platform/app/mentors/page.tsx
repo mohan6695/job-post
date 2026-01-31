@@ -1,23 +1,156 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { FilterSidebar } from '@/components/FilterSidebar';
 import { MentorCard } from '@/components/MentorCard';
-import { searchMentors } from '@/lib/supabase';
-import type { MentorFilter } from '@/lib/types';
+import type { MentorFilter, MentorProfile } from '@/lib/types';
+
+// Dummy data for testing
+const dummyData: MentorProfile[] = [
+  {
+    id: '1',
+    user_id: 'u1',
+    headline: 'Senior Software Engineer at Google',
+    company: 'Google',
+    job_title: 'Senior Software Engineer',
+    years_of_experience: 8,
+    bio: 'I help developers level up their skills',
+    expertise_tags: ['JavaScript', 'React', 'Node.js'],
+    session_price: 10000,
+    avg_rating: 4.8,
+    total_sessions: 50,
+    is_available: true,
+    user: {
+      id: 'u1',
+      first_name: 'John',
+      last_name: 'Doe',
+      avatar_url: null,
+      email: 'john@example.com',
+      role: 'mentor' as const,
+      verified: true,
+      created_at: new Date().toISOString(),
+      bio: null,
+      linkedin_id: null
+    },
+    services: [
+      { 
+        id: 's1', 
+        mentor_id: '1', 
+        service_type: 'resume_review' as const, 
+        description: 'Get feedback on your resume', 
+        duration_minutes: 30, 
+        price_override: null, 
+        is_active: true 
+      },
+      { 
+        id: 's2', 
+        mentor_id: '1', 
+        service_type: 'mock_interview' as const, 
+        description: 'Practice coding interviews', 
+        duration_minutes: 60, 
+        price_override: null, 
+        is_active: true 
+      }
+    ]
+  },
+  {
+    id: '2',
+    user_id: 'u2',
+    headline: 'Product Manager at Microsoft',
+    company: 'Microsoft',
+    job_title: 'Product Manager',
+    years_of_experience: 6,
+    bio: 'I help product managers succeed',
+    expertise_tags: ['Product Management', 'Agile', 'User Research'],
+    session_price: 15000,
+    avg_rating: 4.5,
+    total_sessions: 30,
+    is_available: true,
+    user: {
+      id: 'u2',
+      first_name: 'Jane',
+      last_name: 'Smith',
+      avatar_url: null,
+      email: 'jane@example.com',
+      role: 'mentor' as const,
+      verified: true,
+      created_at: new Date().toISOString(),
+      bio: null,
+      linkedin_id: null
+    },
+    services: [
+      { 
+        id: 's3', 
+        mentor_id: '2', 
+        service_type: 'career_guidance' as const, 
+        description: 'Plan your career path', 
+        duration_minutes: 60, 
+        price_override: null, 
+        is_active: true 
+      },
+      { 
+        id: 's4', 
+        mentor_id: '2', 
+        service_type: 'certification_prep' as const, 
+        description: 'Learn product management', 
+        duration_minutes: 90, 
+        price_override: null, 
+        is_active: true 
+      }
+    ]
+  },
+  {
+    id: '3',
+    user_id: 'u3',
+    headline: 'Data Scientist at Amazon',
+    company: 'Amazon',
+    job_title: 'Data Scientist',
+    years_of_experience: 5,
+    bio: 'I help data scientists excel',
+    expertise_tags: ['Machine Learning', 'Data Analysis', 'Python'],
+    session_price: 12000,
+    avg_rating: 4.7,
+    total_sessions: 40,
+    is_available: true,
+    user: {
+      id: 'u3',
+      first_name: 'Bob',
+      last_name: 'Johnson',
+      avatar_url: null,
+      email: 'bob@example.com',
+      role: 'mentor' as const,
+      verified: true,
+      created_at: new Date().toISOString(),
+      bio: null,
+      linkedin_id: null
+    },
+    services: [
+      { 
+        id: 's5', 
+        mentor_id: '3', 
+        service_type: 'project_review' as const, 
+        description: 'Learn ML concepts', 
+        duration_minutes: 60, 
+        price_override: null, 
+        is_active: true 
+      },
+      { 
+        id: 's6', 
+        mentor_id: '3', 
+        service_type: 'other' as const, 
+        description: 'Master data visualization', 
+        duration_minutes: 30, 
+        price_override: null, 
+        is_active: true 
+      }
+    ]
+  }
+];
 
 export default function MentorsPage() {
   const [filters, setFilters] = useState<MentorFilter>({
     page: 1,
     limit: 20,
     sortBy: 'rating',
-  });
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['mentors', filters],
-    queryFn: () => searchMentors(filters),
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   return (
@@ -31,62 +164,12 @@ export default function MentorsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar Filters */}
-          <aside className="lg:col-span-1">
-            <FilterSidebar 
-              filters={filters} 
-              onFiltersChange={setFilters}
-            />
-          </aside>
-
-          {/* Main Content */}
-          <main className="lg:col-span-3">
-            {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-64 bg-slate-200 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-                Failed to load mentors. Please try again.
-              </div>
-            ) : data?.data?.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-slate-600 text-lg">No mentors found matching your criteria.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data?.data?.map((mentor) => (
-                  <MentorCard key={mentor.id} mentor={mentor} />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {data?.count && data.count > filters.limit! && (
-              <div className="mt-8 flex justify-center gap-2">
-                <button
-                  onClick={() => setFilters(p => ({ ...p, page: Math.max(1, p.page! - 1) }))}
-                  disabled={filters.page === 1}
-                  className="px-4 py-2 border rounded-lg hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="px-4 py-2">
-                  Page {filters.page} of {Math.ceil(data.count / filters.limit!)}
-                </span>
-                <button
-                  onClick={() => setFilters(p => ({ ...p, page: p.page! + 1 }))}
-                  disabled={(filters.page! * filters.limit!) >= data.count}
-                  className="px-4 py-2 border rounded-lg hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </main>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {dummyData.map((mentor, index) => {
+            console.log(`Rendering mentor ${index}:`, mentor);
+            return <MentorCard key={mentor.id} mentor={mentor} />;
+          })}
         </div>
       </div>
     </div>

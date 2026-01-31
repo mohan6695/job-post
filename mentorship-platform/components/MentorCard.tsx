@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
 import type { MentorProfile } from '@/lib/types';
@@ -14,15 +13,14 @@ export function MentorCard({ mentor }: MentorCardProps) {
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = async () => {
-    // TODO: Implement save/wishlist functionality
     setIsSaved(!isSaved);
   };
 
   const price = (mentor.session_price / 100).toFixed(2);
 
   return (
-    <Link href={`/mentors/${mentor.id}`}>
-      <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden">
+    <Link href={`/mentors/${mentor.id}`} className="block">
+      <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-gray-100">
         {/* Header with avatar */}
         <div className="relative h-32 bg-gradient-to-r from-blue-500 to-teal-500">
           <button
@@ -30,7 +28,7 @@ export function MentorCard({ mentor }: MentorCardProps) {
               e.preventDefault();
               handleSave();
             }}
-            className="absolute top-3 right-3 p-2 bg-white/80 rounded-full hover:bg-white"
+            className="absolute top-3 right-3 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
           >
             <Heart
               size={20}
@@ -42,21 +40,11 @@ export function MentorCard({ mentor }: MentorCardProps) {
         {/* Avatar */}
         <div className="relative px-4 -mt-12 mb-4">
           <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-slate-200">
-            {mentor.user?.avatar_url ? (
-              <Image
-                src={mentor.user.avatar_url}
-                alt={mentor.user.first_name}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-slate-300 flex items-center justify-center">
-                <span className="text-slate-600 font-bold text-lg">
-                  {mentor.user?.first_name?.[0]}
-                </span>
-              </div>
-            )}
+            <div className="w-full h-full bg-slate-300 flex items-center justify-center">
+              <span className="text-slate-600 font-bold text-lg">
+                {mentor.user?.first_name?.[0] || 'M'}
+              </span>
+            </div>
           </div>
         </div>
 
